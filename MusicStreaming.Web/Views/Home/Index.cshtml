@@ -1,0 +1,184 @@
+﻿@using MusicStreaming.Application.Common.Models
+@using System.Text.Json
+@model HomeDataVm
+
+<script>
+    var currentUserIsVip = @Model.IsUserVip.ToString().ToLower();
+</script>
+
+@{
+    ViewData["Title"] = "Trang chủ";
+
+    var trendingQueueJson = "";
+    if (Model.TrendingSongs != null && Model.TrendingSongs.Any())
+    {
+        trendingQueueJson = JsonSerializer.Serialize(Model.TrendingSongs.Select(s => new
+        {
+            id = s.Id,
+            audioUrl = s.AudioUrl,
+            title = s.Title,
+            artistName = s.ArtistName,
+            imageUrl = s.ImageUrl,
+            isVip = s.IsVip
+        }));
+    }
+}
+
+<div class="text-white">
+    <div class="hero-banner">
+        <h1 class="hero-title">Đắm chìm thế giới âm nhạc</h1>
+        <p class="hero-subtitle">Khám phá hàng triệu bài hát và Podcast dành riêng cho bạn ngay hôm nay.</p>
+    </div>
+
+    <div class="row g-3 mb-5">
+        <h3 class="fw-bold mb-3">Playlist dành cho bạn</h3>
+        @if (Model.NewPlaylists != null && Model.NewPlaylists.Any())
+        {
+            @foreach (var playlist in Model.NewPlaylists)
+            {
+                <div class="col-md-4 col-lg-4">
+
+                    <a asp-controller="Playlist" asp-action="Detail" asp-route-id="@playlist.Id" class="text-decoration-none">
+
+                        <div class="d-flex align-items-center rounded overflow-hidden playlist-card"
+                             style="background-color: rgba(255,255,255,0.1); cursor:pointer; transition: 0.3s; height: 80px;">
+
+                            <div style="width: 80px; height: 100%; background: linear-gradient(135deg, #4000F4, #603AC8); display:flex; align-items:center; justify-content:center;">
+                                <i class="fa-solid fa-music fa-2x text-white"></i>
+                            </div>
+
+                            <span class="fw-bold ms-3 pe-2 text-white text-truncate">@playlist.Name</span>
+
+                        </div>
+                    </a>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <p class="text-secondary">Chưa có playlist nào.</p>
+            </div>
+        }
+    </div>
+
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <h3 class="fw-bold">Dành cho bạn</h3>
+        <a asp-controller="Song" asp-action="Index" class="text-secondary text-decoration-none small fw-bold hover-underline">XEM TẤT CẢ</a>
+    </div>
+
+    <input type="hidden" id="trendingQueueData" value="@trendingQueueJson" />
+
+    <div class="row g-4">
+        @if (Model.TrendingSongs != null && Model.TrendingSongs.Any())
+        {
+            int trendingIndex = 0;
+
+            @foreach (var song in Model.TrendingSongs)
+            {
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card bg-transparent border-0 h-100 p-3 song-card-hover"
+                         style="background-color: #181818 !important; border-radius: 8px; transition: background-color 0.3s;">
+
+                        <div class="position-relative mb-3 group-play-btn">
+                            <img src="@song.ImageUrl" class="card-img-top rounded shadow-sm" alt="@song.Title"
+                                 style="aspect-ratio: 1/1; object-fit: cover;">
+
+                            <div class="play-button-overlay">
+                                <button class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+                                        style="width: 48px; height: 48px; padding: 0;"
+                                        onclick="playQueue('trendingQueueData', @trendingIndex)">
+
+                                    <i class="fa-solid fa-play text-black" style="font-size: 18px; margin-left: 2px;"></i>
+
+                                </button>
+                            </div>
+                        </div>
+
+                        <h6 class="text-truncate mb-1 fw-bold" title="@song.Title">
+                            @song.Title
+                        </h6>
+
+                        <p class="text-secondary small mb-1 text-truncate">@song.ArtistName</p>
+
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <div>
+                                <span class="badge bg-dark text-secondary border border-secondary" style="font-size: 10px;">
+                                    @song.DurationFormatted
+                                </span>
+                                @if (song.IsVip)
+                                {
+                                    <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">VIP</span>
+                                }
+                            </div>
+
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <button class="btn btn-link text-secondary p-0 hover-white"
+                                        onclick="openAddToPlaylistModal(@song.Id)"
+                                        title="Thêm vào Playlist">
+                                    <i class="fa-solid fa-circle-plus fs-5"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <a asp-controller="Auth" asp-action="Login" class="text-secondary hover-white" title="Đăng nhập để thêm vào Playlist">
+                                    <i class="fa-solid fa-circle-plus fs-5"></i>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+                trendingIndex++;
+            }
+        }
+        else
+        {
+            <p class="text-secondary">Chưa có bài hát nào.</p>
+        }
+    </div>
+
+    <div class="mt-5">
+        <h3 class="fw-bold mb-3">Nghệ sĩ yêu thích</h3>
+        <div class="d-flex gap-4 overflow-auto pb-3">
+            @if (Model.SuggestionArtists != null)
+            {
+                @foreach (var artist in Model.SuggestionArtists)
+                {
+                    <a asp-controller="Singer" asp-action="Detail" asp-route-id="@artist.Id" class="text-decoration-none hover-white">
+                        <div class="text-center" style="min-width: 120px; cursor: pointer;">
+                            <img src="@artist.AvatarUrl" class="rounded-circle shadow mb-2"
+                                 style="width: 120px; height: 120px; object-fit: cover; border: 2px solid transparent;">
+                            <h6 class="fw-bold mt-2 text-white">@artist.Name</h6>
+                            <span class="small text-secondary">Nghệ sĩ</span>
+                        </div>
+                    </a>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .playlist-card:hover {
+        background-color: rgba(255,255,255,0.2) !important;
+    }
+
+    .song-card-hover:hover {
+        background-color: #282828 !important;
+    }
+
+    .play-button-overlay {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+    }
+
+    .group-play-btn:hover .play-button-overlay {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>

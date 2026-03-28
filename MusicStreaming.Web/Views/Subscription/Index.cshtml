@@ -1,0 +1,146 @@
+@using MusicStreaming.Application.Common.Models
+@model PackageVm
+
+@{
+    ViewData["Title"] = "Nâng cấp VIP";
+}
+
+<div class="container py-5 text-white">
+    <div class="text-center mb-5">
+        <i class="fa-solid fa-crown mb-3" style="font-size: 60px; color: #ffd700;"></i>
+        <h1 class="display-4 fw-bold mb-3">Nâng Tầm Trải Nghiệm Âm Nhạc</h1>
+        <p class="lead text-secondary">Nghe nhạc chất lượng cao nhất, không quảng cáo, tận hưởng toàn bộ kho nhạc VIP độc quyền.</p>
+    </div>
+
+    @if (Model != null && Model.Packages != null && Model.Packages.Any())
+    {
+        <div class="row justify-content-center g-4">
+
+            @foreach (var package in Model.Packages)
+            {
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card h-100 bg-transparent border text-center p-4 hover-scale-card"
+                         style="border-color: #ffd700 !important; border-radius: 16px; transition: 0.3s; background: linear-gradient(145deg, #1a1a1a, #2a2a2a) !important;">
+
+                        <h3 class="fw-bold mb-3 text-uppercase" style="color: #ffd700;">@package.Name</h3>
+
+                        <div class="mb-4">
+                            <span class="display-5 fw-bold text-white">@package.Price.ToString("N0")</span>
+                            <span class="text-secondary"> VNĐ</span>
+                            <div class="text-secondary mt-1">Sử dụng trong @package.DurationInMonths tháng</div>
+                        </div>
+
+                        <ul class="list-unstyled text-start mb-4 mx-auto" style="max-width: 200px;">
+                            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i>Không quảng cáo</li>
+                            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i>Kho nhạc VIP</li>
+                            <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i>Chất lượng Lossless</li>
+                        </ul>
+
+                        <div class="mt-auto">
+                            <button class="btn w-100 rounded-pill fw-bold text-dark py-2"
+                                    style="background-color: #ffd700;"
+                                    onclick="checkoutPackage(@package.Id)">
+                                Chọn Gói Này
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-secondary">
+            <h5>Hiện tại hệ thống đang cập nhật các gói cước. Vui lòng quay lại sau!</h5>
+        </div>
+    }
+</div>
+
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: #282828; color: white; border: 1px solid #ffd700; border-radius: 12px;">
+            <div class="modal-header border-0 pb-0 justify-content-center position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                <i id="paymentModalIcon" class="fa-solid fa-circle-question mt-3" style="font-size: 50px; color: #ffd700;"></i>
+            </div>
+            <div class="modal-body text-center pt-3 pb-4">
+                <h4 id="paymentModalTitle" class="fw-bold mb-3" style="color: #ffd700;">Xác nhận nâng cấp</h4>
+                <p id="paymentModalMessage" class="text-secondary mb-4">Bạn có chắc chắn muốn nâng cấp gói VIP này? </p>
+
+                <div id="paymentModalActions">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-scale-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function checkoutPackage(packageId) {
+            Swal.fire({
+                title: 'Xác nhận nâng cấp?',
+                text: "Bạn sẽ được chuyển hướng đến cổng thanh toán PayOS để hoàn tất giao dịch.",
+                icon: 'question',
+                background: '#282828',
+                color: '#ffffff',
+                showCancelButton: true,
+                confirmButtonColor: '#ffd700',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<span style="color: black; font-weight: bold;">Đồng ý, thanh toán ngay</span>',
+                cancelButtonText: '<span style="font-weight: bold;">Hủy</span>'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Subscription/Checkout', { packageId: packageId })
+                        .done(function (response) {
+                            console.log("PayOS response:", response);
+                            if (response.success && response.checkoutUrl) {
+                                console.log("Redirecting to:", response.checkoutUrl);
+                                
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Khởi tạo thành công!',
+                                    html: '<p>Đơn hàng đã được tạo. Vui lòng bấm vào đến trang thanh toán chuyển sang trang quét mã QR của PayOS:</p>',
+                                    background: '#282828',
+                                    color: '#ffffff',
+                                    confirmButtonText: '<span style="color: black; font-weight: bold;">ĐI ĐẾN TRANG THANH TOÁN</span>',
+                                    confirmButtonColor: '#1db954',
+                                    allowOutsideClick: false
+                                }).then((res) => {
+                                    if(res.isConfirmed) {
+                                        window.location.href = response.checkoutUrl;
+                                    }
+                                });
+
+                            } else {
+                                Swal.fire({
+                                    title: 'Lỗi!', 
+                                    text: response.message || 'Có lỗi xảy ra, vui lòng thử lại sau.', 
+                                    icon: 'error',
+                                    background: '#282828',
+                                    color: '#ffffff',
+                                    confirmButtonColor: '#dc3545'
+                                });
+                            }
+                        })
+                        .fail(function (xhr) {
+                            Swal.fire({
+                                title: 'Lỗi hệ thống!', 
+                                text: 'Không thể kết nối đến máy chủ thanh toán. Chi tiết: ' + xhr.statusText, 
+                                icon: 'error',
+                                background: '#282828',
+                                color: '#ffffff',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        });
+                }
+            });
+        }
+    </script>
+}

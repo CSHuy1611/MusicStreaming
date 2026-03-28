@@ -1,0 +1,182 @@
+﻿<UserControl x:Class="MusicStreaming.AdminApp.Views.SongManagementControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="800" 
+             Background="Transparent" Foreground="#FFFFFF">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#B3B3B3" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#282828" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#404040" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="CaretBrush" Value="White" />
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#282828" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#404040" />
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="#181818" />
+            <Setter Property="RowBackground" Value="#181818" />
+            <Setter Property="AlternatingRowBackground" Value="#282828" />
+            <Setter Property="Foreground" Value="#B3B3B3" />
+            <Setter Property="BorderBrush" Value="#404040" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+        </Style>
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#282828" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="BorderBrush" Value="#404040" />
+        </Style>
+        <Style TargetType="DataGridRow">
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#333333" />
+                    <Setter Property="Foreground" Value="#1DB954" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="Button" x:Key="DarkButtonStyle">
+            <Setter Property="Background" Value="#282828"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#404040"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="#121212" BorderBrush="#282828" BorderThickness="1" CornerRadius="12" Margin="10">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#181818" BorderBrush="#282828" BorderThickness="1" Padding="15" Margin="0,0,0,15" CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Tên Bài Hát:" VerticalAlignment="Center" Margin="0,5"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtTitle" Margin="0,5"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Ca Sĩ:" VerticalAlignment="Center" Margin="0,5" Foreground="#B3B3B3"/>
+
+                    <Grid Grid.Row="1" Grid.Column="1" Margin="0,5">
+                        <ComboBox x:Name="CboSinger" Padding="5" DisplayMemberPath="Name" SelectedValuePath="Id" Foreground="Black" />
+                        <TextBlock Text="-- Vui lòng chọn Ca Sĩ --" Foreground="#6C757D" FontStyle="Italic" VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem, ElementName=CboSinger}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Thể Loại:" VerticalAlignment="Center" Margin="0,5" Foreground="#B3B3B3"/>
+
+                    <Grid Grid.Row="2" Grid.Column="1" Margin="0,5">
+                        <ComboBox x:Name="CboGenre" Padding="5" DisplayMemberPath="Name" SelectedValuePath="Id" Foreground="Black" />
+                        <TextBlock Text="-- Vui lòng chọn Thể Loại --" Foreground="#6C757D" FontStyle="Italic" VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem, ElementName=CboGenre}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Thời Lượng:" VerticalAlignment="Center" Margin="0,5"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" x:Name="TxtDuration" Margin="0,5" Text="00:03:00" TextChanged="TxtDuration_TextChanged" Width="150" HorizontalAlignment="Left" ToolTip="Định dạng: hh:mm:ss"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Quyền Truy Cập:" VerticalAlignment="Center" Margin="0,5"/>
+                    <CheckBox Grid.Row="4" Grid.Column="1" x:Name="ChkVip" Content="Là Bài Hát VIP" Margin="0,5" VerticalAlignment="Center"/>
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="File Âm Thanh:" VerticalAlignment="Center" Margin="0,5"/>
+                    <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Margin="0,5">
+                        <TextBox x:Name="TxtAudioFile" Width="300" IsReadOnly="True" Text="(Chọn file .mp3, .wav)"/>
+                        <Button Content="Browse..." Width="80" Margin="10,0,0,0" Style="{StaticResource DarkButtonStyle}" Click="BtnBrowseAudio_Click"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="File Hình Ảnh:" VerticalAlignment="Center" Margin="0,5"/>
+                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Margin="0,5">
+                        <TextBox x:Name="TxtImageFile" Width="300" IsReadOnly="True" Text="(Chọn file .jpg, .png)"/>
+                        <Button Content="Browse..." Width="80" Margin="10,0,0,0" Style="{StaticResource DarkButtonStyle}" Click="BtnBrowseImage_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,15">
+                <Button x:Name="BtnRefresh" Content="Refresh" Width="90" Margin="5,0" Padding="5" Style="{StaticResource DarkButtonStyle}" Click="BtnRefresh_Click"/>
+                <Button x:Name="BtnClear" Content="Clear" Width="90" Margin="5,0" Padding="5" Style="{StaticResource DarkButtonStyle}" Click="BtnClear_Click"/>
+
+                <Button x:Name="BtnAdd" Content="Add" Width="90" Margin="5,0" Padding="5" Background="#1DB954" Foreground="Black" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnAdd_Click"/>
+                <Button x:Name="BtnUpdate" Content="Update" Width="90" Margin="5,0" Padding="5" Background="#ffc107" Foreground="Black" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnUpdate_Click"/>
+                <Button x:Name="BtnDelete" Content="Delete" Width="90" Margin="5,0" Padding="5" Background="#dc3545" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnDelete_Click"/>
+            </StackPanel>
+
+            <DataGrid Grid.Row="2" x:Name="SongsDataGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionChanged="SongsDataGrid_SelectionChanged">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                    <DataGridTextColumn Header="Tên Bài Hát" Binding="{Binding Title}" Width="*"/>
+                    <DataGridTextColumn Header="Ca Sĩ" Binding="{Binding SingerName}" Width="150"/>
+                    <DataGridTextColumn Header="Thể Loại" Binding="{Binding GenreName}" Width="120"/>
+                    <DataGridTextColumn Header="Thời Lượng" Binding="{Binding Duration}" Width="100"/>
+                    <DataGridCheckBoxColumn Header="VIP" Binding="{Binding IsVip}" Width="60"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border x:Name="ProgressOverlay" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed" Background="#C0000000" CornerRadius="5" Panel.ZIndex="99">
+                <Border Background="#181818" BorderBrush="#1DB954" BorderThickness="1" Width="320" Height="130" CornerRadius="8" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtProgressInfo" Text="Đang xử lý..." Foreground="#FFFFFF" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                        <ProgressBar x:Name="PbUpload" Height="22" Minimum="0" Maximum="100" Foreground="#1DB954" Background="#282828" BorderThickness="0"/>
+                    </StackPanel>
+                </Border>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

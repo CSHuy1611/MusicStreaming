@@ -1,0 +1,180 @@
+﻿@using MusicStreaming.Web.Models.AuthViewModels
+@model RegisterViewModel
+
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+}
+
+<style>
+    .field-validation-error {
+        display: none !important;
+    }
+
+    .validation-summary-errors {
+        display: none !important;
+    }
+
+    .input-validation-error {
+        border: 1px solid #dc3545 !important;
+    }
+
+    .toggle-password-icon {
+        cursor: pointer;
+        color: #b3b3b3;
+        transition: color 0.2s ease;
+        z-index: 10; 
+    }
+
+    .toggle-password-icon:hover {
+        color: white;
+    }
+
+
+    .register-card-custom {
+        max-width: 480px !important; 
+        width: 100%;
+        border-radius: 16px !important;
+        border: 1px solid #444; 
+        background-color: #121212;
+        padding: 40px 32px;
+    }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-card-compact shadow-lg register-card-custom">
+
+        <div class="text-center mb-4">
+            <i class="fa-brands fa-spotify text-success" style="font-size: 48px; color: #1db954 !important;"></i>
+            <h2 class="fw-bold mt-3 text-white" style="letter-spacing: -1px;">Đăng ký NeonGroove</h2>
+        </div>
+
+        <form id="registerForm" asp-controller="Auth" asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3 fw-bold text-center server-errors"></div>
+
+            <div class="mb-3">
+                <label asp-for="FullName" class="form-label-compact">Họ và tên</label>
+                <input asp-for="FullName" class="form-control-compact" placeholder="Nhập họ và tên của bạn" />
+                <span asp-validation-for="FullName"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label-compact">Email</label>
+                <input asp-for="Email" class="form-control-compact" placeholder="Nhập địa chỉ email của bạn" autocomplete="username" />
+                <span asp-validation-for="Email"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label-compact">Tạo mật khẩu</label>
+                <div class="position-relative">
+                    <input asp-for="Password" id="regPassword" class="form-control-compact pe-5" placeholder="Tạo mật khẩu (ít nhất 6 ký tự)" autocomplete="new-password" />
+                    <span class="position-absolute top-50 end-0 translate-middle-y pe-3 toggle-password-icon" onclick="togglePassword('regPassword', this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </span>
+                </div>
+                <span asp-validation-for="Password"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="ConfirmPassword" class="form-label-compact">Xác nhận mật khẩu</label>
+                <div class="position-relative">
+                    <input asp-for="ConfirmPassword" id="regConfirmPassword" class="form-control-compact pe-5" placeholder="Nhập lại mật khẩu" autocomplete="new-password" />
+                    <span class="position-absolute top-50 end-0 translate-middle-y pe-3 toggle-password-icon" onclick="togglePassword('regConfirmPassword', this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </span>
+                </div>
+                <span asp-validation-for="ConfirmPassword"></span>
+            </div>
+
+            <button type="submit" class="btn-submit-compact mt-2">Đăng ký ngay</button>
+
+        </form>
+
+        <div class="divider-compact mt-4 mb-4">
+            <span>HOẶC</span>
+        </div>
+
+        <div class="text-center text-secondary" style="font-size: 14px; font-weight: 500;">
+            Bạn đã có tài khoản?
+            <a asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" class="text-white hover-white fw-bold text-decoration-underline" style="transition: 0.2s;">
+                Đăng nhập tại đây
+            </a>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function togglePassword(inputId, iconSpan) {
+            var input = document.getElementById(inputId);
+            var icon = iconSpan.querySelector('i');
+
+            if (input) {
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = "password";
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            } else {
+                console.error("Không tìm thấy input với ID: " + inputId);
+            }
+        }
+
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+                var errors = ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                var errorString = string.Join("<br/>", errors);
+                <text>
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Đăng ký thất bại',
+                        html: '@Html.Raw(errorString)',
+                        background: '#282828',
+                        color: '#fff',         
+                        confirmButtonColor: '#1ed760' 
+                    });
+                });
+                </text>
+        }
+
+  
+        $(document).ready(function () {
+            $("#registerForm").on("submit", function (e) {
+    
+                if (!$(this).valid()) {
+                    e.preventDefault(); 
+
+                    let errorMsgs = [];
+
+                    $("span.field-validation-error").each(function () {
+                        let msg = $(this).text();
+                        if (msg) errorMsgs.push(msg);
+                    });
+
+                    if (errorMsgs.length > 0) {
+                        let uniqueMsgs = [...new Set(errorMsgs)];
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Vui lòng kiểm tra lại',
+                            html: uniqueMsgs.join('<br/>'),
+                            background: '#282828',
+                            color: '#fff',
+                            confirmButtonColor: '#1ed760'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+}

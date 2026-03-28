@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MusicStreaming</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    @{
+        var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+        var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+
+        string IsActive(string controller, string action)
+        {
+            return currentController.Equals(controller, StringComparison.OrdinalIgnoreCase) &&
+            currentAction.Equals(action, StringComparison.OrdinalIgnoreCase)
+            ? "active"
+            : "";
+        }
+    }
+
+    <div class="app-container">
+
+        <aside class="sidebar">
+            <a asp-controller="Home" asp-action="Index" class="logo-container text-decoration-none">
+                <div class="equalizer">
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                </div>
+                <span class="brand-name">NeonGroove</span>
+            </a>
+
+            <ul class="nav-links">
+
+                <li class="nav-group-label">MENU</li>
+
+                <a asp-controller="Home" asp-action="Index"
+                   class="text-decoration-none nav-spa-link" style="color: inherit;"
+                   data-nav-key="Home_Index">
+                <li class="nav-item @IsActive("Home", "Index")">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Trang chủ</span>
+                </li>
+                </a>
+
+                <a asp-controller="Search" asp-action="Explore"
+                   class="text-decoration-none nav-spa-link" style="color: inherit;"
+                   data-nav-key="Search_Explore">
+                <li class="nav-item @IsActive("Search", "Explore")">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Khám Phá</span>
+                </li>
+                </a>
+
+                <a asp-controller="Library" asp-action="Index"
+                   class="text-decoration-none nav-spa-link" style="color: inherit;"
+                   data-nav-key="Library_Index">
+                <li class="nav-item @IsActive("Library", "Index")">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Thư viện</span>
+                </li>
+                </a>
+
+
+                <li class="nav-divider"></li>
+                <li class="nav-group-label">DÀNH CHO BẠN</li>
+
+                <li class="nav-item" style="cursor: pointer;"
+                    data-bs-toggle="modal" data-bs-target="#createPlaylistModal">
+                    <i class="fa-solid fa-square-plus"></i>
+                    <span>Tạo Playlist</span>
+                </li>
+
+                <a asp-controller="Favorite" asp-action="Index"
+                   class="text-decoration-none nav-spa-link" style="color: inherit;"
+                   data-nav-key="Favorite_Index">
+                <li class="nav-item @IsActive("Favorite", "Index")">
+                    <i class="fa-solid fa-heart"></i>
+                    <span>Bài hát đã thích</span>
+                </li>
+                </a>
+
+            </ul>
+        </aside>
+
+        <main class="main-view">
+
+            <header class="top-header">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass text-dark"></i>
+                    <input id="headerSearchInput" type="text" placeholder="Tìm bài hát, nghệ sĩ..." />
+                </div>
+
+                <partial name="_LoginPartial" />
+            </header>
+
+            <div class="content-container p-4">
+                @RenderBody()
+            </div>
+
+        </main>
+
+        <footer class="bottom-player">
+
+            <div class="player-info">
+                <img id="player-img" src="" alt="Cover">
+                <div class="player-text">
+                    <h6 id="player-title">Chọn bài hát để nghe</h6>
+                    <p id="player-artist">NeonGroove</p>
+                </div>
+                <i id="player-heart-icon" class="fa-regular fa-heart ms-3 text-secondary"
+                   style="cursor:pointer; transition: 0.2s;"
+                   onclick="toggleFavoriteCurrentSong()"></i>
+            </div>
+
+            <div class="player-controls">
+                <div class="player-buttons">
+                    <button class="btn-control" id="btn-shuffle" onclick="toggleShuffle()">
+                        <i class="fa-solid fa-shuffle"></i>
+                    </button>
+
+                    <button class="btn-control" onclick="prevSong()"><i class="fa-solid fa-backward-step"></i></button>
+
+                    <button class="btn-control btn-play-main" id="btn-play-pause" onclick="togglePlay()">
+                        <i class="fa-solid fa-circle-play" id="icon-play-pause"></i>
+                    </button>
+
+                    <button class="btn-control" onclick="nextSong()"><i class="fa-solid fa-forward-step"></i></button>
+
+                    <button class="btn-control" id="btn-repeat" onclick="toggleRepeat()">
+                        <i class="fa-solid fa-repeat"></i>
+                    </button>
+                </div>
+
+                <div class="player-progress-bar">
+                    <span id="current-time" class="time-text">0:00</span>
+                    <input type="range" id="progress-bar" value="0" min="0" max="100" oninput="seekSong()">
+                    <span id="duration-time" class="time-text">0:00</span>
+                </div>
+            </div>
+
+            <div class="player-volume">
+                <i class="fa-solid fa-volume-high text-secondary"></i>
+                <input type="range" id="volume-bar" min="0" max="1" step="0.1" value="1" oninput="setVolume()">
+            </div>
+
+            <audio id="audio-source" onended="handleSongEnded()"></audio>
+
+        </footer>
+
+    </div>
+
+    <div class="modal fade" id="createPlaylistModal" tabindex="-1" aria-labelledby="createPlaylistModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background-color: #282828; color: white; border: none; border-radius: 8px;">
+
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="createPlaylistModalLabel">Tạo Playlist mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form id="formCreatePlaylist" asp-controller="Playlist" asp-action="Create" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <input type="text" name="playlistName" class="form-control text-white"
+                                   style="background-color: #3e3e3e; border: 1px solid #555;"
+                                   placeholder="Nhập tên playlist của bạn..." required autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-secondary fw-bold rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-success fw-bold rounded-pill text-black px-4">Tạo mới</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addToPlaylistModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content" style="background-color: #282828; color: white; border: none; border-radius: 8px;">
+                <div class="modal-header border-0 pb-2">
+                    <h6 class="modal-title fw-bold">Thêm vào Playlist</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <input type="hidden" id="hiddenSongIdToAdd" value="" />
+
+                    <div id="userPlaylistsContainer" class="d-flex flex-column gap-2 mt-2">
+                        <div class="text-center text-secondary small">Đang tải...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="vipUpgradeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background-color: #282828; color: white; border: 1px solid #ffd700; border-radius: 12px;">
+                <div class="modal-header border-0 pb-0 justify-content-center position-relative">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                    <i class="fa-solid fa-crown mt-3" style="font-size: 50px; color: #ffd700;"></i>
+                </div>
+                <div class="modal-body text-center pt-3 pb-4">
+                    <h4 class="fw-bold mb-3" style="color: #ffd700;">Dành riêng cho thành viên VIP</h4>
+                    <p class="text-secondary mb-4">Bài hát này là đặc quyền của tài khoản VIP. Hãy nâng cấp ngay để đắm chìm trong không gian âm nhạc không giới hạn với chất lượng cao nhất!</p>
+
+                    <a asp-controller="Subscription" asp-action="Index" data-bs-dismiss="modal" class="btn fw-bold rounded-pill text-black w-75 py-2" style="background-color: #ffd700; font-size: 16px;">
+                        Xem các gói Nâng cấp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

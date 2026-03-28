@@ -1,0 +1,84 @@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@using MusicStreaming.Infrastructure.Identity
+@using MusicStreaming.Application.Common.Interfaces
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IIdentityService IdentityService
+
+@if (SignInManager.IsSignedIn(User))
+{
+    // 1. Lấy thông tin User hiện tại
+    var user = await UserManager.GetUserAsync(User);
+    var fullname = user?.FullName ?? User.Identity.Name;
+    var initial = !string.IsNullOrEmpty(fullname) ? fullname[0].ToString().ToUpper() : "U";
+
+    // 2. Kiểm tra trạng thái VIP
+    bool isVip = false;
+    if (user != null)
+    {
+        isVip = await IdentityService.IsUserVipAsync(user.Id);
+    }
+
+    <script>
+        window.currentUserIsVip = @(isVip ? "true" : "false");
+    </script>
+
+    <div class="d-flex align-items-center">
+
+        @if (!isVip)
+        {
+            <a asp-controller="Subscription" asp-action="Index" class="btn fw-bold rounded-pill text-black px-4 py-2 me-4 hover-scale-card"
+               style="background-color: #ffd700; font-size: 15px; text-decoration: none; border: none; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">
+                <i class="fa-solid fa-crown me-2"></i>Nâng Cấp VIP Ngay
+            </a>
+        }
+
+        <div class="dropdown">
+            <div class="user-avatar-btn" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="@fullname" style="cursor: pointer;">
+                <span style="font-weight: 800; color: white; font-size: 18px;">@initial</span>
+            </div>
+
+            <ul class="dropdown-menu dropdown-menu-end shadow-neon" aria-labelledby="userDropdown">
+                <li>
+                    <h6 class="dropdown-header text-white fw-bold">
+                        Xin chào, @fullname
+                        @if (isVip)
+                        {
+                            <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">PREMIUM</span>
+                        }
+                    </h6>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+
+                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-user"></i>Hồ sơ cá nhân</a></li>
+
+                @if (!isVip)
+                {
+                    <li><a class="dropdown-item text-warning fw-bold" asp-controller="Subscription" asp-action="Index"><i class="fa-solid fa-crown"></i>Mua gói Premium</a></li>
+                }
+
+                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-gear"></i>Cài đặt</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form class="form-inline w-100" asp-controller="Auth" asp-action="Logout" method="post">
+                        <button type="submit" class="dropdown-item text-danger fw-bold w-100 text-start border-0 bg-transparent">
+                            <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+}
+else
+{
+    <script>
+        window.currentUserIsVip = false;
+    </script>
+    <div class="user-menu">
+        <a class="text-secondary me-3 hover-underline small fw-bold" asp-controller="Auth" asp-action="Register">Đăng ký</a>
+        <a class="btn-login-custom" asp-controller="Auth" asp-action="Login">Đăng nhập</a>
+    </div>
+}

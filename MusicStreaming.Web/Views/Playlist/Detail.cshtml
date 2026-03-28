@@ -1,0 +1,133 @@
+﻿@using MusicStreaming.Application.Common.Models
+@using System.Text.Json
+@model PlaylistDetailVm
+
+@{
+    ViewData["Title"] = Model.Name;
+
+    var playlistQueueJson = "";
+    if (Model.Songs != null && Model.Songs.Any())
+    {
+        playlistQueueJson = JsonSerializer.Serialize(Model.Songs.Select(s => new
+        {
+            id = s.Id,
+            audioUrl = s.AudioUrl,
+            title = s.Title,
+            artistName = s.ArtistName,
+            imageUrl = s.ImageUrl,
+            isVip = s.IsVip
+        }));
+    }
+}
+
+<div class="playlist-header d-flex align-items-end p-4 text-white"
+     style="background: linear-gradient(to bottom, #4f4f4f, #121212); height: 300px;">
+
+    <img src="@Model.ImageUrl" class="shadow-lg"
+         style="width: 230px; height: 230px; object-fit: cover; box-shadow: 0 4px 60px rgba(0,0,0,0.5);">
+
+    <div class="ms-4">
+        <span class="text-uppercase fw-bold small">Playlist</span>
+        <h1 class="display-3 fw-bold mb-3" style="font-weight: 900;">@Model.Name</h1>
+        <p class="text-white-50">@Model.Description</p>
+
+        <div class="d-flex align-items-center mt-3">
+            <button class="btn btn-success rounded-circle d-flex align-items-center justify-content-center shadow-lg hover-scale"
+                    style="width: 56px; height: 56px;"
+                    onclick="playQueue('playlistQueueData', 0)">
+                <i class="fa-solid fa-play text-black fs-4 ms-1"></i>
+            </button>
+
+            <i class="fa-regular fa-heart fs-3 ms-4 text-secondary hover-white" style="cursor: pointer;"></i>
+            <i class="fa-solid fa-ellipsis fs-3 ms-4 text-secondary hover-white" style="cursor: pointer;"></i>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid p-4" style="background: linear-gradient(to bottom, #121212, #000); min-height: 50vh;">
+
+    <input type="hidden" id="playlistQueueData" value="@playlistQueueJson" />
+
+    <div class="row text-secondary border-bottom border-secondary pb-2 mb-3 px-3 small text-uppercase">
+        <div class="col-1">#</div>
+        <div class="col-5">Tiêu đề</div>
+        <div class="col-4">Nghệ sĩ</div>
+        <div class="col-1 text-end"><i class="fa-regular fa-clock"></i></div>
+    </div>
+
+    @if (Model.Songs != null && Model.Songs.Any())
+    {
+        int index = 1;
+        int jsIndex = 0;
+
+        foreach (var song in Model.Songs)
+        {
+            <div class="row align-items-center px-3 py-2 rounded hover-bg-light group-play-btn" style="cursor: pointer;">
+
+                <div class="col-1 text-secondary position-relative">
+                    <span class="song-index">@index</span>
+                    <i class="fa-solid fa-play text-white position-absolute top-50 start-0 translate-middle-y ms-3 song-play-icon"
+                       style="display: none; font-size: 12px;"
+                       onclick="playQueue('playlistQueueData', @jsIndex)">
+                    </i>
+                </div>
+
+                <div class="col-5 d-flex align-items-center">
+                    <img src="@song.ImageUrl" class="rounded me-3" width="40" height="40">
+                    <div>
+                        <div class="text-white fw-bold mb-0 text-truncate">
+                            @song.Title
+                            @if (song.IsVip)
+                            {
+                                <span class="badge bg-warning text-dark ms-2" style="font-size: 8px;">VIP</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-4 text-secondary small hover-white">
+                    @song.ArtistName
+                </div>
+
+                <div class="col-1 text-end text-secondary small">
+                    @song.DurationFormatted
+                </div>
+            </div>
+            index++;
+            jsIndex++;
+        }
+    }
+    else
+    {
+        <div class="text-center text-secondary py-5">
+            Playlist này chưa có bài hát nào.
+        </div>
+    }
+</div>
+
+<style>
+    .hover-bg-light:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+        .hover-bg-light:hover .song-index {
+            display: none;
+        }
+
+        .hover-bg-light:hover .song-play-icon {
+            display: block !important;
+        }
+
+    .hover-white:hover {
+        color: white !important;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.05);
+        transition: 0.2s;
+    }
+</style>
+
+<script>
+    var currentUserIsVip = @Model.IsUserVip.ToString().ToLower();
+</script>

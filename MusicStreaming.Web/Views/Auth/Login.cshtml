@@ -1,0 +1,45 @@
+﻿@{
+    ViewData["Title"] = "Đăng Nhập";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card p-4 shadow-lg" style="width: 420px; background-color: #181818; border: 1px solid #282828; border-radius: 15px;">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-white"><i class="bi bi-music-note-beamed text-success"></i> MusicStreaming</h2>
+            <p class="text-secondary small">Đăng nhập để tiếp tục trải nghiệm âm nhạc</p>
+        </div>
+
+        <form asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+            <button type="submit" name="provider" value="Google" class="btn btn-outline-light w-100 rounded-pill py-2 fw-bold d-flex align-items-center justify-content-center gap-2 mb-3">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="20" alt="Google">
+                TIẾP TỤC VỚI GOOGLE
+            </button>
+        </form>
+
+        <div class="d-flex align-items-center my-3 text-secondary">
+            <hr class="flex-grow-1 border-secondary">
+            <span class="mx-2 small">HOẶC</span>
+            <hr class="flex-grow-1 border-secondary">
+        </div>
+
+        <form asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+            <div class="mb-3">
+                <label class="form-label text-secondary small fw-bold">EMAIL</label>
+                <input name="email" class="form-control bg-dark text-white border-secondary shadow-none" placeholder="Email của bạn" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-secondary small fw-bold">MẬT KHẨU</label>
+                <input name="password" type="password" class="form-control bg-dark text-white border-secondary shadow-none" placeholder="Mật khẩu" required />
+            </div>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-success fw-bold py-2 rounded-pill shadow-sm">ĐĂNG NHẬP</button>
+            </div>
+        </form>
+
+        <div class="text-center mt-4">
+            <p class="text-secondary small">Chưa có tài khoản? <a href="#" class="text-success text-decoration-none fw-bold">Đăng ký ngay</a></p>
+        </div>
+    </div>
+</div>

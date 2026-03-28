@@ -1,0 +1,340 @@
+﻿@model MusicStreaming.Application.Common.Models.ExploreVm
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Khám phá & Tìm kiếm - NeonGroove";
+
+    // Khai báo JsonOptions ở ngay trên cùng để dùng chung cho cả file
+    var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+}
+
+<style>
+    /* BỘ LỌC */
+    .filter-container {
+        background-color: #181818;
+        border: 1px solid #282828;
+        border-radius: 12px;
+    }
+
+    .custom-input, .custom-select {
+        background-color: #282828;
+        color: #fff;
+        border: 1px solid #404040;
+        border-radius: 8px;
+    }
+
+        .custom-input:focus, .custom-select:focus {
+            background-color: #333;
+            color: #fff;
+            border-color: #1DB954;
+            box-shadow: none;
+        }
+
+        .custom-select option {
+            background-color: #282828;
+            color: #fff;
+        }
+
+    /* CARD BÀI HÁT TỪ USER */
+    .song-card-hover:hover {
+        background-color: #282828 !important;
+        cursor: pointer;
+    }
+
+    /* HIỆU ỨNG NÚT PLAY */
+    .play-button-overlay {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+    }
+
+    .group-play-btn:hover .play-button-overlay {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .play-button-overlay button:hover {
+        transform: scale(1.05);
+        background-color: #1ed760 !important;
+    }
+
+    .hover-white:hover {
+        color: white !important;
+    }
+
+    /* PHÂN TRANG BO TRÒN (CUSTOM DARK PAGINATION) */
+    .custom-dark-pagination .page-link {
+        width: 40px;
+        height: 40px;
+        background-color: #181818;
+        border-color: #282828;
+        color: #B3B3B3;
+        transition: 0.2s;
+    }
+
+        .custom-dark-pagination .page-link:hover {
+            background-color: #282828;
+            color: #fff;
+        }
+
+    .custom-dark-pagination .page-item.active .page-link {
+        background-color: #1DB954;
+        border-color: #1DB954;
+        color: #000;
+        font-weight: bold;
+    }
+
+    .custom-dark-pagination .page-item.disabled .page-link {
+        background-color: #121212;
+        color: #555;
+        border-color: #282828;
+    }
+</style>
+
+<div class="container-fluid text-white pb-5">
+
+    <form asp-controller="Search" asp-action="Explore" method="get" class="filter-container p-4 mb-5">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-4 position-relative">
+                <i class="fa-solid fa-magnifying-glass position-absolute text-secondary" style="top: 12px; left: 15px;"></i>
+                <input type="text" name="keyword" class="form-control custom-input" placeholder="Tên bài hát, nghệ sĩ..." style="padding-left: 40px;" value="@ViewBag.Keyword">
+            </div>
+
+            <div class="col-md-2">
+                <select name="genreId" class="form-select custom-select" id="genreFilter">
+                    <option value="">-- Thể loại --</option>
+                    @foreach (var genre in Model.Genres)
+                    {
+                        <option value="@genre.Id">@genre.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select name="singerId" class="form-select custom-select" id="singerFilter">
+                    <option value="">-- Ca sĩ --</option>
+                    @foreach (var singer in Model.Singers)
+                    {
+                        <option value="@singer.Id">@singer.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select name="sortBy" class="form-select custom-select" id="sortFilter">
+                    <option value="newest">Mới nhất</option>
+                    <option value="listens">Nhiều lượt nghe</option>
+                    <option value="likes">Nhiều lượt thích</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn w-100 fw-bold rounded-pill" style="background-color: #1DB954; color: #000;">
+                    <i class="fa-solid fa-filter me-1"></i> Lọc kết quả
+                </button>
+            </div>
+        </div>
+    </form>
+
+    @if (!Model.IsSearching)
+    {
+        <h4 class="fw-bold mb-4">🎵 Bài hát Đề cử (Mới nhất)</h4>
+
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-6 g-4">
+            @{
+                int recIndex = 0;
+            }
+            @foreach (var song in Model.RecommendedSongs)
+            {
+                <div class="col">
+                    <div class="card bg-transparent border-0 h-100 p-3 song-card-hover"
+                         style="background-color: #181818 !important; border-radius: 8px; transition: background-color 0.3s;">
+
+                        <div class="position-relative mb-3 group-play-btn">
+                            <img src="@song.ImageUrl" class="card-img-top rounded shadow-sm" alt="@song.Title"
+                                 style="aspect-ratio: 1/1; object-fit: cover;" onerror="this.src='https://via.placeholder.com/300'">
+
+                            <div class="play-button-overlay">
+                                <button class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+                                        style="width: 48px; height: 48px; padding: 0;"
+                                        onclick="playQueue('recommendedQueueData', @recIndex)">
+                                    <i class="fa-solid fa-play text-black" style="font-size: 18px; margin-left: 2px;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <h6 class="text-truncate mb-1 fw-bold" title="@song.Title">@song.Title</h6>
+                        <p class="text-secondary small mb-1 text-truncate" title="@song.ArtistName">@song.ArtistName</p>
+
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <div>
+                                <span class="badge bg-dark text-secondary border border-secondary" style="font-size: 10px;">
+                                    @(song.DurationFormatted ?? "00:00")
+                                </span>
+                                @if (song.IsVip)
+                                {
+                                    <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">VIP</span>
+                                }
+                            </div>
+
+                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <button class="btn btn-link text-secondary p-0 hover-white"
+                                        onclick="openAddToPlaylistModal(@song.Id)" title="Thêm vào Playlist">
+                                    <i class="fa-solid fa-circle-plus fs-5"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <a asp-controller="Auth" asp-action="Login" class="text-secondary hover-white" title="Đăng nhập để thêm vào Playlist">
+                                    <i class="fa-solid fa-circle-plus fs-5"></i>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+                recIndex++;
+            }
+        </div>
+    }
+    else
+    {
+        <h4 class="fw-bold mb-2">Kết quả tìm kiếm</h4>
+        <p class="text-secondary mb-4">Tìm thấy <strong class="text-white">@Model.SearchResults.TotalCount</strong> bài hát phù hợp</p>
+
+        @if (Model.SearchResults.TotalCount > 0)
+        {
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-6 g-4 mb-5">
+                @{
+                    int searchIndex = 0;
+                }
+                @foreach (var song in Model.SearchResults.Items)
+                {
+                    <div class="col">
+                        <div class="card bg-transparent border-0 h-100 p-3 song-card-hover"
+                             style="background-color: #181818 !important; border-radius: 8px; transition: background-color 0.3s;">
+
+                            <div class="position-relative mb-3 group-play-btn">
+                                <img src="@song.ImageUrl" class="card-img-top rounded shadow-sm" alt="@song.Title"
+                                     style="aspect-ratio: 1/1; object-fit: cover;" onerror="this.src='https://via.placeholder.com/300'">
+
+                                <div class="play-button-overlay">
+                                    <button class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+                                            style="width: 48px; height: 48px; padding: 0;"
+                                            onclick="playQueue('searchQueueData', @searchIndex)">
+                                        <i class="fa-solid fa-play text-black" style="font-size: 18px; margin-left: 2px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <h6 class="text-truncate mb-1 fw-bold" title="@song.Title">@song.Title</h6>
+                            <p class="text-secondary small mb-1 text-truncate" title="@song.ArtistName">@song.ArtistName</p>
+
+                            <div class="d-flex align-items-center justify-content-between mt-2">
+                                <div>
+                                    <span class="badge bg-dark text-secondary border border-secondary" style="font-size: 10px;">
+                                        @(song.DurationFormatted ?? "00:00")
+                                    </span>
+                                    @if (song.IsVip)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">VIP</span>
+                                    }
+                                </div>
+
+                                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                {
+                                    <button class="btn btn-link text-secondary p-0 hover-white"
+                                            onclick="openAddToPlaylistModal(@song.Id)" title="Thêm vào Playlist">
+                                        <i class="fa-solid fa-circle-plus fs-5"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Auth" asp-action="Login" class="text-secondary hover-white" title="Đăng nhập để thêm vào Playlist">
+                                        <i class="fa-solid fa-circle-plus fs-5"></i>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    searchIndex++;
+                }
+            </div>
+
+            @if (Model.SearchResults.TotalPages > 1)
+            {
+                <nav aria-label="Page navigation" class="mt-5">
+                    <ul class="pagination justify-content-center custom-dark-pagination gap-2">
+                        <li class="page-item @(Model.SearchResults.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link rounded-circle d-flex align-items-center justify-content-center"
+                               asp-action="Explore"
+                               asp-route-keyword="@ViewBag.Keyword"
+                               asp-route-genreId="@ViewBag.GenreId"
+                               asp-route-singerId="@ViewBag.SingerId"
+                               asp-route-sortBy="@ViewBag.SortBy"
+                               asp-route-page="@(Model.SearchResults.PageNumber - 1)">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.SearchResults.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.SearchResults.PageNumber ? "active" : "")">
+                                <a class="page-link rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                   asp-action="Explore"
+                                   asp-route-keyword="@ViewBag.Keyword"
+                                   asp-route-genreId="@ViewBag.GenreId"
+                                   asp-route-singerId="@ViewBag.SingerId"
+                                   asp-route-sortBy="@ViewBag.SortBy"
+                                   asp-route-page="@i">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.SearchResults.HasNextPage ? "" : "disabled")">
+                            <a class="page-link rounded-circle d-flex align-items-center justify-content-center"
+                               asp-action="Explore"
+                               asp-route-keyword="@ViewBag.Keyword"
+                               asp-route-genreId="@ViewBag.GenreId"
+                               asp-route-singerId="@ViewBag.SingerId"
+                               asp-route-sortBy="@ViewBag.SortBy"
+                               asp-route-page="@(Model.SearchResults.PageNumber + 1)">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="text-center mt-5">
+                <i class="fa-solid fa-music text-secondary" style="font-size: 50px;"></i>
+                <h5 class="mt-3 text-secondary">Không tìm thấy bài hát nào phù hợp với tiêu chí lọc.</h5>
+            </div>
+        }
+    }
+
+    <input type="hidden" id="recommendedQueueData" value="@JsonSerializer.Serialize(Model.RecommendedSongs, jsonOptions)" />
+
+    @if (Model.SearchResults != null && Model.SearchResults.Items != null)
+    {
+        <input type="hidden" id="searchQueueData" value="@JsonSerializer.Serialize(Model.SearchResults.Items, jsonOptions)" />
+    }
+
+</div>
+
+@section Scripts {
+    <script>
+        window.currentUserIsVip = @(User.Identity != null && User.Identity.IsAuthenticated ? "true" : "false");
+
+        
+        (function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('genreId'))  document.getElementById('genreFilter').value  = urlParams.get('genreId');
+            if (urlParams.has('singerId')) document.getElementById('singerFilter').value = urlParams.get('singerId');
+            if (urlParams.has('sortBy'))   document.getElementById('sortFilter').value   = urlParams.get('sortBy');
+        })();
+    </script>
+}

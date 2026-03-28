@@ -1,0 +1,129 @@
+﻿@using MusicStreaming.Application.Common.Models
+@using System.Text.Json
+@model SearchVm
+
+@{
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.Keyword) ? "Tìm kiếm" : $"Kết quả cho '{Model.Keyword}'";
+
+    // TẠO CHUỖI JSON HÀNG ĐỢI CHO KẾT QUẢ TÌM KIẾM
+    var searchQueueJson = "";
+    if (Model.Songs != null && Model.Songs.Any())
+    {
+        searchQueueJson = JsonSerializer.Serialize(Model.Songs.Select(s => new
+        {
+            id = s.Id,
+            audioUrl = s.AudioUrl,
+            title = s.Title,
+            artistName = s.ArtistName,
+            imageUrl = s.ImageUrl,
+            isVip = s.IsVip
+        }));
+    }
+}
+
+<div class="container-fluid text-white py-4">
+    <h2 class="fw-bold mb-4">Kết quả tìm kiếm</h2>
+
+    @if (string.IsNullOrWhiteSpace(Model.Keyword))
+    {
+        <div class="text-center text-secondary mt-5">
+            <i class="fa-solid fa-magnifying-glass fa-4x mb-3 text-secondary" style="opacity: 0.5;"></i>
+            <h4 class="fw-bold text-white">Hãy nhập nội dung bạn muốn tìm</h4>
+            <p>Tìm kiếm bài hát hoặc nghệ sĩ yêu thích của bạn.</p>
+        </div>
+    }
+    else if (Model.Songs == null || !Model.Songs.Any())
+    {
+        <div class="text-center text-secondary mt-5">
+            <h4 class="fw-bold text-white">Không tìm thấy kết quả nào cho "@Model.Keyword"</h4>
+            <p>Vui lòng kiểm tra lại chính tả hoặc dùng các từ khóa khác.</p>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" id="searchQueueData" value="@searchQueueJson" />
+
+        <h5 class="fw-bold mb-4">Bài hát (@Model.Songs.Count)</h5>
+        <div class="row g-4">
+
+            @{
+                int jsIndex = 0;
+            }
+     @foreach (var song in Model.Songs)
+            {
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card bg-transparent border-0 h-100 p-3 song-card-hover"
+                         style="background-color: #181818 !important; border-radius: 8px; transition: background-color 0.3s;">
+
+                        <div class="position-relative mb-3 group-play-btn">
+                            <img src="@song.ImageUrl" class="card-img-top rounded shadow-sm" alt="@song.Title"
+                                 style="aspect-ratio: 1/1; object-fit: cover;">
+
+                            <div class="play-button-overlay">
+                                <button class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+                                        style="width: 48px; height: 48px; padding: 0;"
+                                        onclick="playQueue('searchQueueData', @jsIndex)">
+                                    <i class="fa-solid fa-play text-black" style="font-size: 18px; margin-left: 2px;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <h6 class="text-truncate mb-1 fw-bold text-white" title="@song.Title">
+                            @song.Title
+                        </h6>
+
+                        <p class="text-secondary small mb-1 text-truncate">@song.ArtistName</p>
+
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <div>
+                                <span class="badge bg-dark text-secondary border border-secondary" style="font-size: 10px;">
+                                    @song.DurationFormatted
+                                </span>
+                                @if (song.IsVip)
+                                {
+                                    <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">VIP</span>
+                                }
+                            </div>
+
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <button class="btn btn-link text-secondary p-0 hover-white"
+                                        onclick="openAddToPlaylistModal(@song.Id)"
+                                        title="Thêm vào Playlist">
+                                    <i class="fa-solid fa-circle-plus fs-5"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <a asp-controller="Auth" asp-action="Login" class="text-secondary hover-white" title="Đăng nhập để thêm vào Playlist">
+                                    <i class="fa-solid fa-circle-plus fs-5"></i>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+                jsIndex++;
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .song-card-hover:hover {
+        background-color: #282828 !important;
+    }
+
+    .play-button-overlay {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+    }
+
+    .group-play-btn:hover .play-button-overlay {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>

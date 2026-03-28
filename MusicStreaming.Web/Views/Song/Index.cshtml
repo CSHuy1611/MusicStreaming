@@ -1,0 +1,243 @@
+﻿@using MusicStreaming.Application.Common.Models
+@using MusicStreaming.Application.Common.Dtos
+@using System.Text.Json
+@model PagedResult<SongDto>
+
+@{
+    ViewData["Title"] = "Tất cả bài hát";
+
+    var allSongsQueueJson = "";
+    if (Model.Items != null && Model.Items.Any())
+    {
+        allSongsQueueJson = JsonSerializer.Serialize(Model.Items.Select(s => new
+        {
+            id = s.Id,
+            audioUrl = s.AudioUrl,
+            title = s.Title,
+            artistName = s.ArtistName,
+            imageUrl = s.ImageUrl,
+            isVip = s.IsVip
+        }));
+    }
+}
+
+<style>
+    /* Thẻ bài hát: Nền đen nhạt, bo góc, flexbox để đẩy item xuống đáy */
+    .custom-song-card {
+        background-color: #181818;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+        cursor: pointer;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+    }
+
+        /* Hiệu ứng sáng nền khi rê chuột vào TOÀN BỘ thẻ */
+        .custom-song-card:hover {
+            background-color: #282828;
+        }
+
+    /* ==========================================
+           LOGIC NÚT PLAY THEO CHUẨN SPOTIFY
+           ========================================== */
+    .custom-play-overlay {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        opacity: 0; /* Mặc định ẨN */
+        transform: translateY(8px); /* Nằm thấp xuống 8px */
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+        border-radius: 50%;
+        pointer-events: none; /* Khóa click khi đang ẩn */
+    }
+
+    /* KHI RÊ CHUỘT VÀO THẺ BÀI HÁT -> HIỆN NÚT PLAY */
+    .custom-song-card:hover .custom-play-overlay {
+        opacity: 1; /* Hiện rõ */
+        transform: translateY(0); /* Trượt lên vị trí gốc */
+        pointer-events: auto; /* Mở khóa click */
+    }
+
+    /* Định dạng vòng tròn xanh lá và icon tam giác đen */
+    .custom-play-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: #1ed760;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: black;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+        .custom-play-btn:hover {
+            background-color: #1fdf64;
+            transform: scale(1.05); /* To lên 1 chút khi rê chuột trúng nút */
+        }
+
+        .custom-play-btn i {
+            font-size: 20px;
+            margin-left: 4px; /* Đẩy tam giác ra giữa tâm vòng tròn */
+        }
+
+    /* Nút dấu cộng (+) thêm vào Playlist */
+    .custom-add-btn {
+        color: #b3b3b3;
+        font-size: 22px;
+        transition: color 0.2s ease, transform 0.2s ease;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+
+        .custom-add-btn:hover {
+            color: white;
+            transform: scale(1.1);
+        }
+
+    /* Badge thời lượng và VIP */
+    .badge-duration {
+        font-size: 12px;
+        padding: 2px 6px;
+        color: #a7a7a7;
+        border-radius: 4px;
+        border: 1px solid #444;
+        font-weight: 500;
+    }
+
+    .badge-vip {
+        font-size: 11px;
+        padding: 2px 6px;
+        background-color: #ffc107;
+        color: black;
+        border-radius: 4px;
+        font-weight: 800;
+    }
+
+    /* Phân trang Dark Theme */
+    .custom-dark-pagination .page-link {
+        background-color: transparent;
+        border: 1px solid transparent;
+        color: #b3b3b3;
+        width: 40px;
+        height: 40px;
+        transition: all 0.3s ease;
+    }
+
+        .custom-dark-pagination .page-link:hover {
+            background-color: #282828;
+            color: white;
+        }
+
+    .custom-dark-pagination .page-item.active .page-link {
+        background-color: #1ed760;
+        color: black;
+        border-color: #1ed760;
+    }
+
+    .custom-dark-pagination .page-item.disabled .page-link {
+        color: #555;
+        background-color: transparent;
+        border-color: transparent;
+    }
+</style>
+
+<div class="text-white">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2">
+        <h2 class="fw-bold mb-0">Tất cả bài hát</h2>
+        <span class="text-secondary small">Trang @Model.PageNumber / @Model.TotalPages (Tổng: @Model.TotalCount bài hát)</span>
+    </div>
+
+    <input type="hidden" id="allSongsQueueData" value="@allSongsQueueJson" />
+
+    <div class="row g-4">
+        @if (Model.Items != null && Model.Items.Any())
+        {
+            int index = 0;
+            @foreach (var song in Model.Items)
+            {
+                <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+
+                    <div class="custom-song-card">
+
+                        <div class="position-relative mb-3">
+                            <img src="@song.ImageUrl" class="w-100 shadow-sm" alt="@song.Title"
+                                 style="aspect-ratio: 1/1; object-fit: cover; border-radius: 6px;">
+
+                            <div class="custom-play-overlay">
+                                <button class="custom-play-btn" onclick="playQueue('allSongsQueueData', @index)">
+                                    <i class="fa-solid fa-play"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <h6 class="text-white mb-1 fw-bold text-truncate" title="@song.Title" style="font-size: 16px;">
+                            @song.Title
+                        </h6>
+                        <p class="text-truncate mb-3" style="font-size: 14px; color: #a7a7a7;">@song.ArtistName</p>
+
+                        <div class="d-flex align-items-center justify-content-between mt-auto">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge-duration">@song.DurationFormatted</span>
+                                @if (song.IsVip)
+                                {
+                                    <span class="badge-vip">VIP</span>
+                                }
+                            </div>
+
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <button class="custom-add-btn" onclick="openAddToPlaylistModal(@song.Id)" title="Thêm vào Playlist">
+                                    <i class="fa-solid fa-circle-plus"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <a asp-controller="Auth" asp-action="Login" class="custom-add-btn" title="Đăng nhập để thêm vào Playlist">
+                                    <i class="fa-solid fa-circle-plus"></i>
+                                </a>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+                index++;
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <i class="fa-solid fa-compact-disc fa-3x text-secondary mb-3"></i>
+                <h5 class="text-secondary">Chưa có bài hát nào trong hệ thống.</h5>
+            </div>
+        }
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation" class="mt-5">
+            <ul class="pagination justify-content-center custom-dark-pagination gap-2">
+                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                    <a class="page-link rounded-circle d-flex align-items-center justify-content-center"
+                       asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 1)"><i class="fa-solid fa-chevron-left"></i></a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                           asp-action="Index" asp-route-pageNumber="@i">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                    <a class="page-link rounded-circle d-flex align-items-center justify-content-center"
+                       asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 1)"><i class="fa-solid fa-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

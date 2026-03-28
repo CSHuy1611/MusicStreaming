@@ -1,0 +1,88 @@
+﻿@using MusicStreaming.Application.Common.Dtos
+@using MusicStreaming.Application.Features.Library.Queries.GetUserPlaylists
+@model List<LibraryPlaylistDto>
+
+@{
+    ViewData["Title"] = "Thư viện của bạn";
+}
+
+<div class="container-fluid text-white py-4">
+    <h2 class="fw-bold mb-4">Thư viện của bạn</h2>
+
+    <ul class="nav nav-pills mb-4" id="library-tabs">
+        <li class="nav-item">
+            <a class="nav-link active bg-light text-dark fw-bold rounded-pill px-3 py-1 me-2" href="#">Playlist</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-white fw-bold rounded-pill px-3 py-1 me-2" style="background-color: rgba(255,255,255,0.1);" href="#">Nghệ sĩ</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-white fw-bold rounded-pill px-3 py-1 me-2" style="background-color: rgba(255,255,255,0.1);" href="#">Album</a>
+        </li>
+    </ul>
+
+    <div class="row g-4">
+
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card bg-transparent border-0 h-100 p-3 library-card d-flex flex-column justify-content-center align-items-center"
+                 data-bs-toggle="modal" data-bs-target="#createPlaylistModal"
+                 style="background-color: #181818 !important; border-radius: 8px; cursor: pointer; border: 1px dashed #555 !important;">
+                <i class="fa-solid fa-plus fa-3x text-secondary mb-3"></i>
+                <h6 class="text-truncate fw-bold text-white mb-0">Tạo mới</h6>
+            </div>
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            foreach (var playlist in Model)
+            {
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a asp-controller="Playlist" asp-action="Detail" asp-route-id="@playlist.Id" class="text-decoration-none">
+                        <div class="card bg-transparent border-0 h-100 p-3 library-card"
+                             style="background-color: #181818 !important; border-radius: 8px; transition: background-color 0.3s;">
+
+                            <div class="position-relative mb-3 group-play-btn">
+
+                                <div class="rounded shadow-sm d-flex align-items-center justify-content-center"
+                                     style="width: 100%; aspect-ratio: 1/1; background: linear-gradient(135deg, #4000F4, #603AC8);">
+                                    <i class="fa-solid fa-music fa-3x text-white" style="opacity: 0.6;"></i>
+                                </div>
+
+                                <div class="play-button-overlay">
+                                    <button class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+                                            style="width: 48px; height: 48px; padding: 0;">
+                                        <i class="fa-solid fa-play text-black" style="font-size: 18px; margin-left: 2px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <h6 class="text-truncate mb-1 fw-bold text-white" title="@playlist.Name">@playlist.Name</h6>
+                            <p class="text-secondary small mb-1">Của bạn</p>
+
+                        </div>
+                    </a>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<style>
+    .library-card:hover {
+        background-color: #282828 !important;
+    }
+
+    .play-button-overlay {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+    }
+
+    .group-play-btn:hover .play-button-overlay {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
